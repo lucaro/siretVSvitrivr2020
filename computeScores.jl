@@ -1,4 +1,4 @@
-using CSV, DataFrames
+using CSV, DataFrames, Combinatorics
 
 maxPointsPerTask = 100
 maxPointsAtTaskEnd = 50
@@ -56,3 +56,37 @@ close(f)
 
 
 ######################################################
+
+
+taskGroups = groupby(submissions, :task)
+
+dfs = DataFrame[]
+
+teamNames = sort(unique(submissions[:, :team]))
+
+for t in taskGroups
+	taskName =  t[1, :task]
+	taskDuration = 60000 * (occursin("Visual", taskName) ? 5 : 8)
+
+	for cmb in combinations(teamNames, 2)
+
+		subs = sort(t[map(x -> x in cmb, t[:, :team]), :], :submissionTime)
+
+		score = 0
+		if (any(subs[:, :correctSegment]))
+			firstCorrect = indexin(true, subs[:, :correctSegment])[]
+			timeFraction = 1.0 - subs[firstCorrect, :submissionTime] / taskDuration
+			score = round(Int, max(0.0, maxPointsAtTaskEnd + ((maxPointsPerTask - maxPointsAtTaskEnd) * timeFraction) -  ((firstCorrect - 1) * penaltyPerWrongSubmission)))
+		end
+		push!(dfs, DataFrame(task = taskName, team_a = cmb[1], team_b = cmb[2], score = score))
+
+	end
+end
+
+scoreCombinationList = vcat(dfs...)
+
+CSV.write("scoreCombinationList.csv", scoreCombinationList)
+
+combinationScoreSums = sort(by(scoreCombinationList, [:team_a, :team_b], :score => sum), :score_sum, rev = true)
+
+
