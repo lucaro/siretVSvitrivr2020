@@ -1,4 +1,4 @@
-using CSV, DataFrames, Combinatorics
+using CSV, DataFrames, Combinatorics, Gadfly, Cairo
 
 maxPointsPerTask = 100
 maxPointsAtTaskEnd = 50
@@ -32,6 +32,9 @@ scoreList = vcat(dfs...)
 
 CSV.write("scoreList.csv", scoreList)
 
+scoreSums = sort(by(scoreList, :team, :score => sum), :score_sum, rev = true)
+
+CSV.write("scoreSums.csv", scoreSums)
 
 ######################################################
 
@@ -89,4 +92,58 @@ CSV.write("scoreCombinationList.csv", scoreCombinationList)
 
 combinationScoreSums = sort(by(scoreCombinationList, [:team_a, :team_b], :score => sum), :score_sum, rev = true)
 
+CSV.write("combinationScoreSums.csv", scoreCombinationList)
 
+
+df = sort(combinationScoreSums, [:team_a, :team_b])
+
+p = plot(
+       layer(df, x = :team_a, y = :team_b, label = map(x -> "$x", df[:, :score_sum]), Geom.label(position=:centered)),
+       layer(df, x = :team_a, y = :team_b, color = :score_sum, Geom.rectbin),
+       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score")
+	   )
+
+draw(PNG("combinationScore.png", 18cm, 16cm, dpi=300), p)
+
+
+
+######################################################
+
+taskGroups = groupby(submissions, :task)
+
+dfs = DataFrame[]
+
+for t in taskGroups
+	teams = groupby(t, :team)
+	for submissions in teams
+		push!(dfs, DataFrame(task = submissions[1, :task], team = submissions[1, :team], solved = any(submissions[:, :correctSegment]) ? 1 : 0))
+	end
+end
+
+solved = vcat(dfs...)
+
+solvedCount = sort(by(solved, :team, :solved => sum), :solved_sum, rev = true)
+
+CSV.write("tasksSolvedIndividual.csv", solvedCount)
+
+
+
+######################################################
+
+taskGroups = groupby(submissions, :task)
+
+dfs = DataFrame[]
+
+teamNames = sort(unique(submissions[:, :team]))
+
+for t in taskGroups
+	taskName =  t[1, :task]
+
+	for cmb in combinations(teamNames, 2)
+
+		subs = sort(t[map(x -> x in cmb, t[:, :team]), :], :submissionTime)
+
+		push!(dfs, DataFrame(task = taskName, team_a = cmb[1], team_b = cmb[2], solved = any(subs[:, :correctSegment]) ? 1 : 0))
+
+	end
+end
