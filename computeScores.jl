@@ -147,3 +147,5 @@ for t in taskGroups
 
 	end
 end
+
+CSV.write("tasksSolvedCombined.csv", solvedCount)
