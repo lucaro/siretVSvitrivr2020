@@ -92,7 +92,7 @@ CSV.write("scoreCombinationList.csv", scoreCombinationList)
 
 combinationScoreSums = sort(by(scoreCombinationList, [:team_a, :team_b], :score => sum), :score_sum, rev = true)
 
-CSV.write("combinationScoreSums.csv", scoreCombinationList)
+CSV.write("combinationScoreSums.csv", combinationScoreSums)
 
 
 df = sort(combinationScoreSums, [:team_a, :team_b])
@@ -149,3 +149,33 @@ for t in taskGroups
 end
 
 CSV.write("tasksSolvedCombined.csv", solvedCount)
+
+
+######################################################
+
+combinationScoreSums = CSV.read("combinationScoreSums.csv")
+scoreSums = CSV.read("scoreSums.csv")
+
+df = sort(vcat(combinationScoreSums,
+       DataFrame(team_a = scoreSums[:, :team], team_b = scoreSums[:, :team], score_sum = scoreSums[:, :score_sum])),
+       [:team_a, :team_b])
+
+p = plot(
+       layer(df, x = :team_a, y = :team_b, label = map(x -> "$x", df[:, :score_sum]), Geom.label(position=:centered)),
+       layer(df, x = :team_a, y = :team_b, color = :score_sum, Geom.rectbin),
+       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score"), Scale.color_continuous(minvalue=1000, maxvalue=3000)
+	   )
+
+draw(PDF("combinationScoreWithIndividual.pdf", 14cm, 12cm), p)
+
+
+
+######################################################
+
+
+df = DataFrame(task = map(x -> reduce(replace, ["KIS Visual" => "V", "KIS Textual" => "T"], init=x), submissions[:, :task]), team = map(x -> split(x, " ")[1], submissions[:, :team]), submissionTime = submissions[:, :submissionTime], correct = submissions[:, :correctSegment])
+
+df = df[df[:, :correct], :]
+
+p = plot(df, y = :submissionTime, x = :task, color = :team, Geom.boxplot, Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title=""), Scale.y_continuous(labels = x -> "$(round(Int, x / 60000)) min"), Guide.YTicks(ticks = collect(0:60000:(8*60000))), Theme(key_position=:bottom))
+draw(PDF("submissionTimes.pdf", 20cm, 6cm), p)
