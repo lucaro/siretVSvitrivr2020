@@ -38,7 +38,7 @@ CSV.write("scoreSums.csv", scoreSums)
 
 ######################################################
 
-teamNames = unique(scoreList[:, :team])
+taskNames = unique(scoreList[:, :task])
 
 teamNames = sort(unique(scoreList[:, :team]))
 
@@ -103,7 +103,7 @@ p = plot(
        Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score")
 	   )
 
-draw(PNG("combinationScore.png", 18cm, 16cm, dpi=300), p)
+draw(PDF("combinationScore.pdf", 14cm, 12cm), p)
 
 
 
