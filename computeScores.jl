@@ -190,3 +190,27 @@ tasks = sort(unique(submissions[:, :task]))
 df = by(vcat(submissions, DataFrame(team = repeat(teamNames, inner = length(tasks)), task = repeat(tasks, outer = length(teamNames)), submissionTime = 0, correctItem = false, correctSegment = false)), [:task, :team], :correctItem => any)
 
 CSV.write("tasksSolvedList.csv", sort(df, [:team, :task]))
+
+
+######################################################
+
+tasks = JSON.parsefile("siret_vs_vitrivr_competition.json")["tasks"]
+
+dfs = DataFrame[]
+
+for task in tasks
+
+	fps = task["item"]["fps"]
+
+	push!(dfs, DataFrame(
+		task_name = task["name"],
+		item_name = task["item"]["name"],
+		start_frame = round(Int, floor(fps * (task["temporalRange"]["start"]["value"] - 1))),
+		end_frame = round(Int, ceil(fps * (task["temporalRange"]["end"]["value"] + 1)))
+		)
+	)
+end
+
+df = vcat(dfs...)
+
+CSV.write("taskFrameRanges.csv", df)
