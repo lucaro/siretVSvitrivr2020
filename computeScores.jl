@@ -179,3 +179,14 @@ df = df[df[:, :correct], :]
 
 p = plot(df, y = :submissionTime, x = :task, color = :team, Geom.boxplot, Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title=""), Scale.y_continuous(labels = x -> "$(round(Int, x / 60000)) min"), Guide.YTicks(ticks = collect(0:60000:(8*60000))), Theme(key_position=:bottom))
 draw(PDF("submissionTimes.pdf", 20cm, 6cm), p)
+
+
+######################################################
+
+teamNames = sort(unique(submissions[:, :team]))
+tasks = sort(unique(submissions[:, :task]))
+
+
+df = by(vcat(submissions, DataFrame(team = repeat(teamNames, inner = length(tasks)), task = repeat(tasks, outer = length(teamNames)), submissionTime = 0, correctItem = false, correctSegment = false)), [:task, :team], :correctItem => any)
+
+CSV.write("tasksSolvedList.csv", sort(df, [:team, :task]))
