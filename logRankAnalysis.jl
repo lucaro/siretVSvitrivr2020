@@ -44,7 +44,11 @@ for dir in dirs
 
             rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
 
-            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank))
+            categories = join(relevant_json["usedCategories"], "-")
+            types = join(relevant_json["usedTypes"], "-")
+            sortType = join(relevant_json["sortType"], "-")
+
+            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, categories = categories, types = types, sortType = sortType))
 
         end
 
@@ -90,7 +94,11 @@ for dir in dirs
 
             rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
 
-            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank))
+            categories = join(relevant_json["usedCategories"], "-")
+            types = join(relevant_json["usedTypes"], "-")
+            sortType = join(relevant_json["sortType"], "-")
+
+            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, categories = categories, types = types, sortType = sortType))
 
         end
 
