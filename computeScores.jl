@@ -183,6 +183,19 @@ draw(PDF("submissionTimes.pdf", 20cm, 6cm), p)
 
 ######################################################
 
+
+df = DataFrame(team = map(x -> split(x, " ")[1], submissions[:, :team]), submissionTime = submissions[:, :submissionTime], correct = submissions[:, :correctSegment], type = map(x -> split(x, " ")[2], submissions[:, :task]))
+
+df = df[df[:, :correct], :]
+df[:, :group] =  df[:, :type] .* " - " .* df[:, :team]
+df = sort(df, :group)
+
+ p = plot(df, x = :submissionTime, color = :group, Geom.density(bandwidth=10_000), Coord.cartesian(xmin = 0, xmax = 9*60000), Scale.x_continuous(labels = x -> "$(round(Int, x / 60000)) min"),
+ Guide.XTicks(ticks = collect(0:60000:(9*60000))), Guide.XLabel("Time until correct submission"), Guide.ColorKey(title=""), Scale.color_discrete_manual(colorant"red", colorant"blue", colorant"orange", colorant"green"), Theme(key_position=:bottom))
+draw(PDF("submissionTimeDistribution.pdf", 14cm, 12cm), p)
+
+######################################################
+
 teamNames = sort(unique(submissions[:, :team]))
 tasks = sort(unique(submissions[:, :task]))
 
