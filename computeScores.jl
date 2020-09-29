@@ -245,3 +245,19 @@ color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", 
 
 p = plot(df, x = :rank_minimum, color = :group, Geom.density(bandwidth = 0.1), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 5), Guide.XLabel("Best Rank"), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
 draw(PDF("bestRankDistribution.pdf", 14cm, 12cm), p)
+
+######################################################
+
+ranks = CSV.read("logResultRanks.csv")
+
+df = ranks[ranks[:video_rank] .> 0, :]
+df = by(df, [:team, :task], :video_rank => minimum)
+df[:, :task] = map(x -> split(x, " ")[2], df[:, :task])
+df[:, :team] = map(x -> x[1:end-1], df[:, :team])
+df[:, :group] =  df[:, :task] .* " - " .* df[:, :team]
+df = sort(df, :group)
+
+color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
+
+p = plot(df, x = :video_rank_minimum, color = :group, Geom.density(bandwidth = 0.1), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 5), Guide.XLabel("Best Rank"), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
+draw(PDF("bestVideoRankDistribution.pdf", 14cm, 12cm), p)

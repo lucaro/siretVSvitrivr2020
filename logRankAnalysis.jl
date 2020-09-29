@@ -1,4 +1,4 @@
-using CSV, JSON, DaraFrames
+using CSV, JSON, DataFrames
 
 
 frameRanges = CSV.read("taskFrameRanges.csv")
@@ -44,11 +44,15 @@ for dir in dirs
 
             rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
 
+            idx = findfirst(x -> x["video"] == target_video, relevant_json["results"])
+
+            video_rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
+
             categories = join(relevant_json["usedCategories"], "-")
             types = join(relevant_json["usedTypes"], "-")
             sortType = join(relevant_json["sortType"], "-")
 
-            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, categories = categories, types = types, sortType = sortType))
+            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, video_rank = video_rank, categories = categories, types = types, sortType = sortType))
 
         end
 
@@ -94,11 +98,15 @@ for dir in dirs
 
             rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
 
+            idx = findfirst(x -> x["video"] == target_video, relevant_json["results"])
+
+            video_rank = idx == nothing ? -1 : relevant_json["results"][idx]["rank"]
+
             categories = join(relevant_json["usedCategories"], "-")
             types = join(relevant_json["usedTypes"], "-")
             sortType = join(relevant_json["sortType"], "-")
 
-            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, categories = categories, types = types, sortType = sortType))
+            push!(dfs, DataFrame(team = team, task = task_name, timestamp = timestamp, rank = rank, video_rank = video_rank, categories = categories, types = types, sortType = sortType))
 
         end
 
