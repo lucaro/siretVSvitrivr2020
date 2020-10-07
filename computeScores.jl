@@ -20,7 +20,7 @@ for t in taskGroups
 	for submissions in teams
 		score = 0
 		if (any(submissions[:, :correctSegment]))
-			firstCorrect = indexin(true, submissions[:, :correctSegment])[]
+			firstCorrect = indexin(true, submissions[:, :correctSegment])[1]
 			timeFraction = 1.0 - submissions[firstCorrect, :submissionTime] / taskDuration
 			score = round(Int, max(0.0, maxPointsAtTaskEnd + ((maxPointsPerTask - maxPointsAtTaskEnd) * timeFraction) -  ((firstCorrect - 1) * penaltyPerWrongSubmission)))
 		end
@@ -77,7 +77,7 @@ for t in taskGroups
 
 		score = 0
 		if (any(subs[:, :correctSegment]))
-			firstCorrect = indexin(true, subs[:, :correctSegment])[]
+			firstCorrect = indexin(true, subs[:, :correctSegment])[1]
 			timeFraction = 1.0 - subs[firstCorrect, :submissionTime] / taskDuration
 			score = round(Int, max(0.0, maxPointsAtTaskEnd + ((maxPointsPerTask - maxPointsAtTaskEnd) * timeFraction) -  ((firstCorrect - 1) * penaltyPerWrongSubmission)))
 		end
@@ -192,8 +192,8 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :submissionTime, color = :group, Geom.density(bandwidth=10_000), Coord.cartesian(xmin = 0, xmax = 9*60000), Scale.x_continuous(labels = x -> "$(round(Int, x / 60000)) min"),
- Guide.XTicks(ticks = collect(0:60000:(9*60000))), Guide.XLabel("Time until correct submission"), Guide.ColorKey(title="Team, Type (Number of correct Submissions)", labels = ["siret, Textual (94) ", "vitrivr, Textual (86) ", "siret, Visual (102) ", "vitrivr, Visual (87) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :submissionTime, color = :group, Geom.histogram(position = :dodge, bincount = 20), Coord.cartesian(xmin = 0, xmax = 8*60000), Scale.x_continuous(labels = x -> "$(round(Int, x / 60000)) min"), Guide.XTicks(ticks = collect(0:60000:(8*60000))), Guide.XLabel("Time until correct submission"), Guide.ColorKey(title="Team, Type (Number of correct Submissions)", labels = ["siret, Textual (94) ", "vitrivr, Textual (86) ", "siret, Visual (102) ", "vitrivr, Visual (87) "]), color_scale, Theme(key_position=:bottom))
+
 draw(PDF("submissionTimeDistribution.pdf", 14cm, 12cm), p)
 
 ######################################################
@@ -243,7 +243,7 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :rank_minimum, color = :group, Geom.density(bandwidth = 0.1), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 5), Guide.XLabel("Best Rank"), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
 draw(PDF("bestRankDistribution.pdf", 14cm, 12cm), p)
 
 ######################################################
@@ -259,5 +259,5 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :video_rank_minimum, color = :group, Geom.density(bandwidth = 0.1), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 5), Guide.XLabel("Best Rank"), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :video_rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
 draw(PDF("bestVideoRankDistribution.pdf", 14cm, 12cm), p)
