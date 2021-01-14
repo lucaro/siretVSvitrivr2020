@@ -48,10 +48,10 @@ d$time <- d$submissionTime/1000
 
 ggsave("plot-times.pdf", width=2, height=2, scale=1.5, units='in', 
   ggplot() +
-  geom_violin(data=d[d$correctItem=='true',], trim=T, aes(x=system, y=time, fill=system), adjust=0.3, scale='count') +
+  geom_violin(data=d[d$correctItem=='true',], trim=T, aes(x=system, y=time, fill=system, color=system), adjust=0.3, scale='count', size=0) +
   facet_grid(.~taskType) +
   scale_fill_manual('System', values=c('#ffb0a0','#a0b0ff'), guide=F) +
-  #scale_color_manual('System', values=c('#c02000','#0020c0'), guide=F) +
+  scale_color_manual('System', values=c('#ffb0a0','#a0b0ff'), guide=F) +
   xlab("Retrieval system") +
   scale_y_continuous('Correct submission time', labels=function(x)sitools::f2si(x, unit='s')) +
   theme_minimal()
