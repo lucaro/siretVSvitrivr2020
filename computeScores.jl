@@ -105,6 +105,122 @@ p = plot(
 
 draw(PDF("combinationScore.pdf", 14cm, 12cm), p)
 
+######################################################
+
+
+
+taskGroups = groupby(submissions, :task)
+
+dfs = DataFrame[]
+
+teamNames = sort(unique(submissions[:, :team]))
+
+for t in taskGroups
+	taskName =  t[1, :task]
+	taskDuration = 60000 * (occursin("Visual", taskName) ? 5 : 8)
+	for cmb in combinations(teamNames, 2)
+
+		subs = sort(t[map(x -> x in cmb, t[:, :team]), :], :submissionTime)
+
+		score = 0
+		if (any(subs[:, :correctSegment]))
+			firstCorrect = indexin(true, subs[:, :correctSegment])[1]
+			timeFraction = 1.0 - subs[firstCorrect, :submissionTime] / taskDuration
+			score = round(Int, max(0.0, timeFraction * maxPointsPerTask))
+		end
+		push!(dfs, DataFrame(task = taskName, team_a = cmb[1], team_b = cmb[2], score = score))
+
+	end
+
+	for team in teamNames
+		subs = sort(t[t[:, :team] .== team, :], :submissionTime)
+
+		score = 0
+		if (any(subs[:, :correctSegment]))
+			firstCorrect = indexin(true, subs[:, :correctSegment])[1]
+			timeFraction = 1.0 - subs[firstCorrect, :submissionTime] / taskDuration
+			score = round(Int, max(0.0, timeFraction * maxPointsPerTask))
+		end
+		push!(dfs, DataFrame(task = taskName, team_a = team, team_b = team, score = score))
+
+	end
+
+end
+
+timeScoreCombinationList = vcat(dfs...)
+
+timeScoreCombinationListSums = sort(by(timeScoreCombinationList, [:team_a, :team_b], :score => sum), :score_sum, rev = true)
+
+CSV.write("timeScoreCombinationListSums.csv", timeScoreCombinationListSums)
+
+df = df = sort(timeScoreCombinationListSums, [:team_a, :team_b])
+
+p = plot(
+       layer(df, x = :team_a, y = :team_b, label = map(x -> "$x", df[:, :score_sum]), Geom.label(position=:centered)),
+       layer(df, x = :team_a, y = :team_b, color = :score_sum, Geom.rectbin),
+       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score"), Scale.color_continuous(minvalue=750, maxvalue=2500),
+	   Theme(key_position = :none, plot_padding = [-1mm, 1mm, 1mm, -1mm])
+	   )
+
+
+draw(PDF("timeScoreCombinationListSums.pdf", 14cm, 10cm), p)
+
+
+######################################################
+
+
+
+taskGroups = groupby(submissions, :task)
+
+dfs = DataFrame[]
+
+teamNames = sort(unique(submissions[:, :team]))
+
+for t in taskGroups
+	taskName =  t[1, :task]
+
+	for cmb in combinations(teamNames, 2)
+
+		subs = sort(t[map(x -> x in cmb, t[:, :team]), :], :submissionTime)
+
+		score = 0
+		if (any(subs[:, :correctSegment]))
+			score = 1
+		end
+		push!(dfs, DataFrame(task = taskName, team_a = cmb[1], team_b = cmb[2], score = score))
+
+	end
+
+	for team in teamNames
+		subs = sort(t[t[:, :team] .== team, :], :submissionTime)
+
+		score = 0
+		if (any(subs[:, :correctSegment]))
+			score = 1
+		end
+		push!(dfs, DataFrame(task = taskName, team_a = team, team_b = team, score = score))
+
+	end
+
+end
+
+taskCountCombinationList = vcat(dfs...)
+
+taskCountCombinationSums = sort(by(taskCountCombinationList, [:team_a, :team_b], :score => sum), :score_sum, rev = true)
+
+CSV.write("taskCountCombinationSums.csv", taskCountCombinationSums)
+
+df = df = sort(taskCountCombinationSums, [:team_a, :team_b])
+
+p = plot(
+       layer(df, x = :team_a, y = :team_b, label = map(x -> "$x", df[:, :score_sum]), Geom.label(position=:centered)),
+       layer(df, x = :team_a, y = :team_b, color = :score_sum, Geom.rectbin),
+       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score"), Scale.color_continuous(minvalue=15, maxvalue=40),
+	   Theme(key_position = :none, plot_padding = [-1mm, 1mm, 1mm, -1mm])
+	   )
+
+
+draw(PDF("taskCountCombinationSums.pdf", 14cm, 10cm), p)
 
 
 ######################################################
@@ -163,10 +279,11 @@ df = sort(vcat(combinationScoreSums,
 p = plot(
        layer(df, x = :team_a, y = :team_b, label = map(x -> "$x", df[:, :score_sum]), Geom.label(position=:centered)),
        layer(df, x = :team_a, y = :team_b, color = :score_sum, Geom.rectbin),
-       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score"), Scale.color_continuous(minvalue=1000, maxvalue=3000)
+       Guide.XLabel(""), Guide.YLabel(""), Guide.ColorKey(title = "Score"), Scale.color_continuous(minvalue=1000, maxvalue=2900),
+	   Theme(key_position = :none, plot_padding = [-1mm, 1mm, 1mm, -1mm])
 	   )
 
-draw(PDF("combinationScoreWithIndividual.pdf", 14cm, 12cm), p)
+draw(PDF("combinationScoreWithIndividual.pdf", 14cm, 10cm), p)
 
 
 
@@ -192,7 +309,7 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :submissionTime, color = :group, Geom.histogram(position = :dodge, bincount = 20), Coord.cartesian(xmin = 0, xmax = 8*60000), Scale.x_continuous(labels = x -> "$(round(Int, x / 60000)) min"), Guide.XTicks(ticks = collect(0:60000:(8*60000))), Guide.XLabel("Time until correct submission"), Guide.ColorKey(title="Team, Type (Number of correct Submissions)", labels = ["siret, Textual (94) ", "vitrivr, Textual (86) ", "siret, Visual (102) ", "vitrivr, Visual (87) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :submissionTime, color = :group, Geom.histogram(position = :dodge, bincount = 20), Coord.cartesian(xmin = 0, xmax = 8*60000), Scale.x_continuous(labels = x -> "$(round(Int, x / 60000)) min"), Guide.XTicks(ticks = collect(0:60000:(8*60000))), Guide.XLabel("Time until correct submission"), Guide.ColorKey(title="Team, Type (Number of correct Submissions)", labels = ["SOMHunter, Textual (94) ", "vitrivr, Textual (86) ", "SOMHunter, Visual (102) ", "vitrivr, Visual (87) "]), color_scale, Theme(key_position=:bottom))
 
 draw(PDF("submissionTimeDistribution.pdf", 14cm, 12cm), p)
 
@@ -209,7 +326,7 @@ CSV.write("tasksSolvedList.csv", sort(df, [:team, :task]))
 
 ######################################################
 
-tasks = JSON.parsefile("siret_vs_vitrivr_competition.json")["tasks"]
+tasks = JSON.parsefile("SOMHunter_vs_vitrivr_competition.json")["tasks"]
 
 dfs = DataFrame[]
 
@@ -243,7 +360,7 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["SOMHunter, Textual (123) ", "vitrivr, Textual (92) ", "SOMHunter, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
 draw(PDF("bestRankDistribution.pdf", 14cm, 12cm), p)
 
 ######################################################
@@ -259,5 +376,5 @@ df = sort(df, :group)
 
 color_scale = Scale.color_discrete_manual(colorant"#F04941", colorant"#2992F0", colorant"#A3221C", colorant"#3670A3")
 
-p = plot(df, x = :video_rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["siret, Textual (123) ", "vitrivr, Textual (92) ", "siret, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
+p = plot(df, x = :video_rank_minimum, color = :group, Geom.histogram(position = :dodge, bincount = 20), Scale.x_log10, Coord.cartesian(xmin = 0, xmax = 4.5), Guide.XLabel("Best Rank"), Guide.XTicks(ticks = collect(0:1:4)), Guide.ColorKey(title="Team, Type (Number of Task Instances)", labels = ["SOMHunter, Textual (123) ", "vitrivr, Textual (92) ", "SOMHunter, Visual (129) ", "vitrivr, Visual (88) "]), color_scale, Theme(key_position=:bottom))
 draw(PDF("bestVideoRankDistribution.pdf", 14cm, 12cm), p)
